@@ -1,0 +1,79 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rf",
+                "build"
+            ]
+        },
+        {
+            "label": "mkdir-build",
+            "type": "shell",
+            "command": "mkdir",
+            "args": [
+                "build"
+            ],
+            "dependsOn": [
+                "clean"
+            ]
+        },
+        {
+            "label": "cmake-debug",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S",
+                "${workspaceFolder}",
+                "-B",
+                "${workspaceFolder}/build",
+                "-DCMAKE_BUILD_TYPE=Debug"
+            ],
+            "dependsOn": [
+                "mkdir-build"
+            ]
+        },
+        {
+            "label": "cmake-release",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S",
+                "${workspaceFolder}",
+                "-B",
+                "${workspaceFolder}/build",
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "dependsOn": [
+                "clean"
+            ]
+        },
+        {
+            "label": "build-debug",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-C",
+                "${workspaceFolder}/build",
+            ],
+            "dependsOn": [
+                "cmake-debug"
+            ]
+        },
+        {
+            "label": "build-release",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-C",
+                "${workspaceFolder}/build",
+            ],
+            "dependsOn": [
+                "cmake-release"
+            ]
+        }
+    ]
+}
