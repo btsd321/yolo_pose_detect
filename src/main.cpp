@@ -1,4 +1,7 @@
 // #include <onnxruntime_cxx_api.h>
+#include <unistd.h>
+#include <limits.h>
+#include <string>
 #include <openvino/openvino.hpp>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
@@ -10,6 +13,23 @@ static constexpr int NUM_CLASSES = 1;    // Number of classes
 static constexpr int NUM_ANCHORS = 8400; // Number of infer results
 static constexpr float MERGE_CONF_ERROR = 0.6;
 static constexpr float MERGE_MIN_IOU = 0.9;
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
+// 获取当前可执行文件路径
+std::string getExecutablePath() {
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    return std::string(result, (count > 0) ? count : 0);
+}
+
+// 获取可执行文件的文件夹目录
+std::string getExecutableDir() {
+    std::string path = getExecutablePath();
+    return path.substr(0, path.find_last_of('/'));
+}
 
 /**
  * @brief YOLO图像预处理函数
@@ -113,8 +133,15 @@ static void generateProposals(
     {
         double class_score;
         cv::Point class_id;
-        cv::Mat num_scores =
-            output_buffer.col(anchor_idx);
+
+
+        if(output_buffer.at<float>(4, anchor_idx) < conf_threshold)// output_buffer索引4为置信度
+        {
+            continue;
+        }
+
+        
+
         cv::waitKey(1);
     //             .rowRange(4,
     //                       4 + NUM_CLASSES);
@@ -263,9 +290,13 @@ int main()
     //         std::cerr << e.what() << '\n';
     //     }
 
+
     std::unique_ptr<ov::Core> ov_core_;
     std::unique_ptr<ov::CompiledModel> compiled_model_;
-    const std::filesystem::path model_path_ = "/home/lixinhao/Project/yolo_pose_detect/data/model/best_openvino_model/best.xml";
+
+    // 组合模型相对路径
+    const std::filesystem::path model_path_ = getExecutableDir() + "/" + "data/model/best_openvino_model/best.xml";
+    std::cout << "Model path: " << model_path_ << std::endl;
     const std::string device_name_ = "CPU";
     float conf_threshold_ = 0.5f;
     int top_k = 10;
@@ -289,7 +320,9 @@ int main()
     compiled_model_ = std::make_unique<ov::CompiledModel>(
         ov_core_->compile_model(model, device_name_, perf_mode));
 
-    cv::Mat img = cv::imread("data/pictures/20250331_202850_FNmE13Sw.jpg");
+    const std::filesystem::path img_path_ = getExecutableDir() + "/" + "data/pictures/20250331_202850_FNmE13Sw.jpg";
+    std::cout << "Image path: " << img_path_ << std::endl;
+    cv::Mat img = cv::imread(img_path_.string());
     
     float scale_ = 1.0f;
     cv::Size resize = cv::Size(INPUT_W, INPUT_H);

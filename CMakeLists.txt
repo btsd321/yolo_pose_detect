@@ -11,6 +11,7 @@ string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
 # include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # if(NOT ONNXRUNTIME_ROOTDIR)
 #   if(WIN32)
